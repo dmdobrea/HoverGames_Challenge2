@@ -18,6 +18,8 @@ from multiprocessing import Process
 from multiprocessing import Queue
 from multiprocessing import Value
 
+from pymavlink import mavutil
+
 #=======================================================================
 def write_video(outputPath, writeVideo, frameWQueue, W, H):
 	# initialize the FourCC and video writer object
@@ -80,12 +82,14 @@ ap.add_argument("-m", "--mode", type=int, required=True,
 ap.add_argument("-t", "--target", type=str, required=True,
 	choices=["myriad", "cpu"],
 	help="target processor for object detection")
-ap.add_argument("-i", "--input", type=str, required=True,
+ap.add_argument("-i", "--input", type=str,
 	help="path to the input video file")
 ap.add_argument("-o", "--output", type=str,
 	help="path to optional output video file")	
 ap.add_argument("-s", "--server-ip", 
 	help="ip address of the server to which the client will connect")	
+ap.add_argument("-v", "--verbose", nargs='?',
+	help="provide various information to understand what is happening in the system")	
 args = vars(ap.parse_args())
 
 #=======================================================================
@@ -94,6 +98,7 @@ args = vars(ap.parse_args())
 #0 to 100, higher is better quality, 95 is cv2 default
 jpeg_quality = 65 
 skip_frames  = 5
+customMess_frames = 40
 
 #=======================================================================
 # initialize the list of class labels MobileNet SSD detects
@@ -130,10 +135,36 @@ else:
 	net.setPreferableTarget  (cv2.dnn.DNN_TARGET_CPU)
 	net.setPreferableBackend (cv2.dnn.DNN_BACKEND_OPENCV)
 
+# the DNN just processed the frame 
+dnnWork = 0
+
 #=======================================================================
-# Based on the input grab a reference to the video file
-print("[INFO] : Opening input video file...")
-vs = cv2.VideoCapture(args["input"])
+# MAVLink2
+# create a  connection to FMU
+if args["mode"] == 2:
+	mavutil.set_dialect("video_monitor")
+
+	# create a connection to FMU
+	hoverGames = mavutil.mavlink_connection("/dev/ttymxc2", baud=921600, input=False)
+
+	# wait for the heartbeat message to find the system id
+	hoverGames.wait_heartbeat()
+
+	if args["verbose"] is not None:
+		print("[INFO] : Heartbeat from system (system %u component %u)"%(hoverGames.target_system, hoverGames.target_component))
+
+#=======================================================================
+# Based on the input grab, a reference to the video file or to camera
+# If no input video file. get data from Google Coral camera
+if not args.get("input", False):
+	print("[INFO] : Starting camera video stream...")
+	vs = cv2.VideoCapture('v4l2src ! video/x-raw,width=640,height=480 ! decodebin ! videoconvert ! appsink', cv2.CAP_GSTREAMER)
+
+	# allow the camera sensor to warmup
+	time.sleep(2.0)
+else:
+	print("[INFO] : Opening input video file...")
+	vs = cv2.VideoCapture(args["input"])
 	
 #=======================================================================
 # INIT
@@ -161,10 +192,19 @@ fps = FPS().start()
 #=======================================================================
 # loop over frames from the video stream
 while True:
-	# grab the next frame and handle if we are reading from either
-	# VideoCapture or VideoStream
-	frame = vs.read()
-	frame = frame[1]
+	# grab the next frame
+	if not args.get("input", False):
+		# read the frame from the camera 
+		ret, frame = vs.read()
+
+		if ret == False:
+			print ("[Error] It was was impossible to aquire a frame!")
+		else:        
+			# flips the frame vertically to compensate the camera mount
+			frame = cv2.flip(frame,0)   
+	else: 
+		frame = vs.read()
+		frame = frame[1]
 
 	# Having a video and we did not grab a frame then we
 	# have reached the end of the video
@@ -210,6 +250,8 @@ while True:
 		streamProcess.start()			
 
 	if noFrames % skip_frames == 0:
+		dnnWork = 1
+
 		# initialize a new set of detected human
 		trackers = []
 		confidences = []
@@ -264,6 +306,7 @@ while True:
 				# utilize it during skip frames
 				trackers.append(tracker)				
 	else:
+		dnnWork = 0
 		i = 0
 		# loop over the trackers
 		for tracker in trackers:
@@ -297,7 +340,24 @@ while True:
 	if args["mode"] == 1:
 		# writing the video frame to the streaming queue
 		frameSQueue.put(frame)
-		
+
+	if args["mode"] == 2:
+		# if customMess_frames passed then send the custom message
+		if noFrames % customMess_frames == 0:
+			if dnnWork == 1:
+				infoL = b'DNN'	
+			else:
+				infoL = b'tracking'
+
+			#send custom mavlink message: video_monitor
+			hoverGames.mav.video_monitor_send(
+				timestamp  = int(time.time() * 1e6),     # time in microseconds
+				info       = infoL,
+				lat        = 0,
+				lon        = 0,
+				no_people  = len(confidences),
+				confidence = max(confidences))
+
 	key = cv2.waitKey(1) & 0xFF
 	# if the `q` key was pressed, break from the loop
 	if key == ord("q"):
@@ -314,7 +374,7 @@ print("[INFO] : Elapsed time: {:.2f}".format(fps.elapsed()))
 print("[INFO] : Approx. FPS:  {:.2f}".format(fps.fps()))
 
 #=======================================================================
-# release the video file pointer
+# release the video file pointer or video input stream
 vs.release()
 
 #=======================================================================
