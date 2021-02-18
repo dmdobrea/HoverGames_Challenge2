@@ -1,13 +1,14 @@
-# USAGE:
+# USAGE (for real case application):
 #
-# python human_recog.py --target cpu    --input videos/example_02.mp4
-# python human_recog.py --target myriad --input videos/example_02.mp4
+# 	python human_recog.py --mode 2 --target cpu
+# 	python human_recog.py -m 2 -t cpu
 
 # import the necessary packages
 from imutils.video import FPS
 import argparse
 import imagezmq
 import socket
+import signal
 import time
 import sys
 
@@ -20,7 +21,56 @@ from multiprocessing import Value
 
 from pymavlink import mavutil
 
+import threading
+
 #=======================================================================
+# A thread that manage the acquisition of the GPS data
+def getGPS_thread(out_q, mutex, verbose):
+	i = 0
+
+	while mainHR_v.value:
+		mutex.acquire()
+		msg = hoverGames.recv_match()
+		mutex.release()
+	
+		if not msg:
+			continue
+		if msg.get_type() == 'GPS_RAW_INT':
+			if verbose is not None: 
+				print("\n\n*****Got message: %s*****"%msg.get_type())
+				print("Message: %s"%msg)
+				print("As dictionary: %s"%msg.to_dict())
+				print("  Lat. : %s"%msg.lat)
+				print("  Lon. : %s"%msg.lon)
+				print("  eph. : %s"%msg.eph)
+
+			if out_q.empty() is False:
+				out_q.get()
+
+			# an queue, to exchange GPS data safely 
+			# with the main application 
+			out_q.put([msg.lat, msg.lon])
+
+		time.sleep(0.05)
+
+	print("[INFO] : GPS thread end.")
+
+#=======================================================================
+# a function to handle keyboard interrupt
+def signal_handler_CtrlC(sig, myFrame) :
+	print ("")
+	print ("[INFO] : You pressed Ctrl + C ...")
+	#signal.signal(signal.SIGINT, signal.SIG_DFL)
+	
+	#===============================================================
+	# terminate main loop & GPS data acquisition loop
+	mainHR_v.value = 0
+
+	#===============================================================
+	print ("[INFO] : Ctrl + C clean up end !!!")
+
+#=======================================================================
+# save the output data (where the human subject are recognized) to file
 def write_video(outputPath, writeVideo, frameWQueue, W, H):
 	# initialize the FourCC and video writer object
 	# fourcc = 4-byte code used to specify the video codec:
@@ -29,10 +79,10 @@ def write_video(outputPath, writeVideo, frameWQueue, W, H):
 	fourcc = cv2.VideoWriter_fourcc(*"MJPG")						
 	writer = cv2.VideoWriter (outputPath, fourcc, 30.0, (W, H), True)
 	
-	# loop while the write flag is set or the output frame queue is
-	# not empty
+	# loop while the write flag is set or the output 
+	# frame queue is not empty
 	print("[INFO] : Starting writing process.")
-	while writeVideo.value or not frameWQueue.empty():
+	while writeVideo_v.value or not frameWQueue.empty():
 		
 		# check if the output frame queue is not empty
 		if not frameWQueue.empty():
@@ -43,9 +93,11 @@ def write_video(outputPath, writeVideo, frameWQueue, W, H):
 
 	# release the video writer object
 	writer.release()
-	print("[INFO] : Writer process => ended.")
+
+	print("[INFO] : Writer process end.")
 	
-#=======================================================================	
+#=======================================================================
+# stream the human recognition results through ZeroMQ to a server	
 def stream_video(myServerIP, streamVideo, frameSQueue, jpeg_quality):
 	# loop while the stram flag is set or 
 	# the output frame queue is not empty
@@ -57,7 +109,9 @@ def stream_video(myServerIP, streamVideo, frameSQueue, jpeg_quality):
 	
 	# get the host name
 	navq_Name = socket.gethostname()
-	
+
+	# loop while the stream flag is set or   
+	# the output frame queue is not empty
 	while streamVideo.value or not frameSQueue.empty():
 		
 		# check if the output frame queue is not empty
@@ -72,8 +126,11 @@ def stream_video(myServerIP, streamVideo, frameSQueue, jpeg_quality):
 				[int(cv2.IMWRITE_JPEG_QUALITY), jpeg_quality])
 
 			# send the jpeg image
-			sender.send_jpg(navq_Name, jpg_buffer)   
+			sender.send_jpg(navq_Name, jpg_buffer)  
 
+	print("[INFO] : The streaming process end.")
+
+#=======================================================================	
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--mode", type=int, required=True,
@@ -97,8 +154,25 @@ args = vars(ap.parse_args())
 
 #0 to 100, higher is better quality, 95 is cv2 default
 jpeg_quality = 65 
-skip_frames  = 5
+
+# number of skip frames: 
+#    * 1 detection performed with MobileNet-SSD in the first frame, 
+#    * {skip_frames - 1} frames in which the tracking is done through 
+#                        the correlation tracker algorithm
+skip_frames  = 15
+
+# the number of frames after a custom MAVlink message will be sent 
 customMess_frames = 40
+
+#=======================================================================
+# check if the IP address of the server exist in the case of
+#                selecting the streaming mode
+if args["mode"] == 1:
+	if args["server_ip"] is None:
+		print(" ")
+		print("[ERROR] : You selected the streaming mode, but no server IP")
+		print(" ")
+		sys.exit(0)
 
 #=======================================================================
 # initialize the list of class labels MobileNet SSD detects
@@ -108,15 +182,6 @@ CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
 	"sofa", "train", "tvmonitor"]
 
 #=======================================================================
-# check if the IP address of the server exist in the case of
-# selecting the streaming mode
-if args["mode"] == 1:
-	if args["server_ip"] is None:
-		print(" ")
-		print("[ERROR] : You selected the streaming mode, but no server IP")
-		print(" ")
-		sys.exit(0)
-
 # load our serialized model from disk
 print("[INFO] : Loading dnn MobileNet model...")
 net = cv2.dnn.readNetFromCaffe("mobilenet_ssd/MobileNetSSD_deploy.prototxt",
@@ -145,7 +210,7 @@ if args["mode"] == 2:
 	mavutil.set_dialect("video_monitor")
 
 	# create a connection to FMU
-	hoverGames = mavutil.mavlink_connection("/dev/ttymxc2", baud=921600, input=False)
+	hoverGames = mavutil.mavlink_connection("/dev/ttymxc2", baud=921600)	# input=False
 
 	# wait for the heartbeat message to find the system id
 	hoverGames.wait_heartbeat()
@@ -172,18 +237,51 @@ else:
 # initialize the frame dimensions
 W = None
 H = None
+
 # initialize the number of frames processed up to now
-noFrames = 0
-confidence = 0
+noFrames    = 0
+confidence  = 0
+myLatitude  = 0
+myLongitude = 0
 
 #=======================================================================
 writerProcess = None
 streamProcess = None
-writeVideo    = None
-streamVideo   = None
+
+threadGPS     = None
+
+writeVideo_v  = None
+streamVideo_v = None
+threadGPS_v   = None	
+mainHR_v      = None	
+
+getgpsQueue   = None	# the GPS data frame queue
 frameWQueue   = None	# the frame queue for avi file writing
 frameSQueue   = None	# the frame queue for the video streaming
-		
+
+mainHR_v      = Value('i', 1)
+
+#=======================================================================
+# begin writing the video to disk if required
+if args["mode"] == 2 and threadGPS is None:
+	print("[INFO] : Configuring the process used to get GPS data")
+	
+	# initialize a frame queue
+	getgpsQueue = Queue()
+
+	# intialize a mutex
+	mutexGPS = threading.Lock()
+
+	#=======================================================================
+	threadGPS = threading.Thread(target=getGPS_thread, args=(getgpsQueue, mutexGPS, args["verbose"], ))
+	threadGPS.start()
+
+
+#=======================================================================
+# signal trap to handle keyboard interrupt
+signal.signal(signal.SIGINT, signal_handler_CtrlC)
+
+#=======================================================================
 print("[INFO] : Starting human detection...")
 
 # start the frames per second throughput estimator
@@ -191,7 +289,7 @@ fps = FPS().start()
 
 #=======================================================================
 # loop over frames from the video stream
-while True:
+while mainHR_v.value:
 	# grab the next frame
 	if not args.get("input", False):
 		# read the frame from the camera 
@@ -226,12 +324,12 @@ while True:
 		
 		# set the value of the write flag (used here 
 		# to start the imgs writing)
-		writeVideo = Value('i', 1)	
+		writeVideo_v = Value('i', 1)	
 	
 		# initialize a frame queue and start the video writer
 		frameWQueue = Queue()
 		writerProcess = Process(target=write_video, 
-			args=(args["output"], writeVideo, frameWQueue, W, H))
+			args=(args["output"], writeVideo_v, frameWQueue, W, H))
 		writerProcess.start()	
 		
 	#===================================================================
@@ -241,12 +339,12 @@ while True:
 		
 		# set the value of the write flag (used here 
 		# to start the imgs streaming)
-		streamVideo = Value('i', 1)	
+		streamVideo_v = Value('i', 1)	
 	
 		# initialize a frame queue and start the video writer
 		frameSQueue = Queue()
 		streamProcess = Process(target=stream_video, 
-			args=(args["server_ip"], streamVideo, frameSQueue, jpeg_quality))
+			args=(args["server_ip"], streamVideo_v, frameSQueue, jpeg_quality))
 		streamProcess.start()			
 
 	if noFrames % skip_frames == 0:
@@ -255,7 +353,11 @@ while True:
 		# initialize a new set of detected human
 		trackers = []
 		confidences = []
-		
+
+		if args["verbose"] is not None:
+			print(" ")
+			print("[INFO] : Starting DNN ... ")
+
 		# convert the frame to a blob 
 		blob = cv2.dnn.blobFromImage(frame, size=(300, 300), ddepth=cv2.CV_8U)
 		# print("First Blob: {}".format(blob.shape))
@@ -265,6 +367,9 @@ while True:
 	
 		# pass the blob through the network and obtain the detections	
 		networkOutput = net.forward()
+
+		if args["verbose"] is not None:
+			print("[INFO] : End DNN ... ")
 
 		for detection in networkOutput[0, 0]:
 				
@@ -349,14 +454,25 @@ while True:
 			else:
 				infoL = b'tracking'
 
+			if getgpsQueue.empty() is False:
+				lat_lon_GPS = getgpsQueue.get()
+				myLatitude  = lat_lon_GPS[0]
+				myLongitude = lat_lon_GPS[1]
+
+				if args["verbose"] is not None:
+					print(" [Info] : Main prg. Lat. %s"%lat_lon_GPS[0]) 
+					print(" [Info] : Main prg. Lon. %s"%lat_lon_GPS[1]) 
+
 			#send custom mavlink message: video_monitor
+			mutexGPS.acquire()
 			hoverGames.mav.video_monitor_send(
 				timestamp  = int(time.time() * 1e6),     # time in microseconds
 				info       = infoL,
-				lat        = 0,
-				lon        = 0,
+				lat        = myLatitude,
+				lon        = myLongitude,
 				no_people  = len(confidences),
-				confidence = max(confidences))
+				confidence = max(confidences) if len(confidences) != 0 else 0)
+			mutexGPS.release()
 
 	key = cv2.waitKey(1) & 0xFF
 	# if the `q` key was pressed, break from the loop
@@ -380,23 +496,27 @@ vs.release()
 #=======================================================================
 # terminate the video writer process
 if writerProcess is not None and args["output"] is not None:
-	writeVideo.value = 0
+	writeVideo_v.value = 0
 	writerProcess.join()
-	print("[INFO] : The writer process end.")
 
 #=======================================================================
 # terminate the video streaming process
 if streamProcess is not None and args["mode"] == 1:
-	streamVideo.value = 0
+	streamVideo_v.value = 0
 	streamProcess.join()
-	print("[INFO] : The streaming process end.")
 
 #=======================================================================
 # close any open windows if exist
 if args["output"] is None and args["mode"] == 0:
 	print("[INFO] : Destroying the main graphical window.")
 	cv2.destroyAllWindows()
+
+#=======================================================================
+# terminate all loop
+mainHR_v.value = 0
+threadGPS.join()
 	
+#=======================================================================
 net.setPreferableTarget  (cv2.dnn.DNN_TARGET_CPU)
 net.setPreferableBackend (cv2.dnn.DNN_BACKEND_OPENCV)	
 
