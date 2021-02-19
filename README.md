@@ -50,4 +50,8 @@ Several examples of hr_RealAppNavQ.py use:
 2. For system performance analysis: **hr_RealAppNavQ.py -m 0 -t cpu -i videos/VideoTest2.mp4 -o output/VideoResults.avi**. In this situation, the human detection algorithm will run on the system's CPUs, using the VideoTest2.mp4 video, and the results will be saved to VideoResults.avi. Saving the data was done on a different process (different by the main process containing the detection algorithm), so detection performance will not be affected.  
 3. Real-time human detection and streaming data **hr_RealAppNavQ.py -m 1 -t cpu -s 192.168.100.100**. In this mode, the [Human detection - in real-time (YouTube)](https://youtu.be/pCcItZNOWmc) movie was done. The streaming is done on a new process.
 
+## Other software applications from this repository
+
+- All the applications from the folder **[01_Exemples_MAVSDK](https://github.com/dmdobrea/HoverGames_Challenge2/tree/main/01_Exemples_MAVSDK)** are not developed by myself. They are only used to prove the functionality of communication through MAVSDK. These applications have been configured to work with the **NXPHoverGames** drone via serial communication. If you want to learn how to use the MAVSDK to communicate from applications developed in C/C++ or Python (running on a companion computer) with a PX4 FMU unit, please **[follow the steps from this tutorial](https://www.hackster.io/mdobrea/c-and-python-interface-management-application-for-fmuk66-6dd935)**.
+
 
