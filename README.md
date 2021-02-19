@@ -17,21 +17,21 @@ In this project, I propose a solution to sustain and enforce the quarantine zone
 
 ### Hardware components:
 
-- 1 x NXP KIT-HGDRONEK66 (carbon frame kit, BLDC motors, ESCs, PDB, propellers, etc.)
-- 1 x NXP RDDRONE-FMUK66 - flight management unit
-- 1 x NXP RDDRONE-8MMNavQ - an embedded computer (i.MX 8M Mini Quad, 2GB LPDDR4, 16GB eMMC, WiFi/BT)
-- 1 x Google Coral camera
-- 1 x NXP HGD-TELEM433 - 433Mhz Telemetry Radio 
+- 1 x **NXP KIT-HGDRONEK66** (carbon frame kit, BLDC motors, ESCs, PDB, propellers, etc.)
+- 1 x **NXP RDDRONE-FMUK66** - flight management unit
+- 1 x **NXP RDDRONE-8MMNavQ** - an embedded computer (i.MX 8M Mini Quad, 2GB LPDDR4, 16GB eMMC, WiFi/BT)
+- 1 x **Google Coral camera**
+- 1 x **NXP HGD-TELEM433** - 433Mhz Telemetry Radio 
 - 1 x 4S 5000 mAh battery (3S can work too)
 
 ### Software components
 
-#### Offical software
+#### Official software
 
-- PX4 - an open source flight control software for drones and other unmanned vehicles
-- PX4 MAVSDK - a package used to control NXPHoverGames using MAVLink
-- PX4 QGroundControl - Ground Control Station for the MAVLink protocol
-- NXP MCUXpresso IDE - Eclipse-based IDE tool used to develop applications on NXP RDDRONE-FMUK66
+- **PX4** - an open source flight control software for drones and other unmanned vehicles
+- **PX4 MAVSDK** - a package used to control NXPHoverGames using MAVLink
+- **PX4 QGroundControl** - Ground Control Station for the MAVLink protocol
+- **NXP MCUXpresso IDE** - Eclipse-based IDE tool used to develop applications on NXP RDDRONE-FMUK66
 
 #### Main software components developed for NXP HoverGames Challenge 2
 
