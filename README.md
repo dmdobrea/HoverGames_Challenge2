@@ -26,7 +26,7 @@ In this project, I propose a solution to sustain and enforce the quarantine zone
 
 ### Software components
 
-#### Official software
+#### Official support software
 
 - **PX4** - an open source flight control software for drones and other unmanned vehicles
 - **PX4 MAVSDK** - a package used to control NXPHoverGames using MAVLink
@@ -38,4 +38,11 @@ In this project, I propose a solution to sustain and enforce the quarantine zone
 - **hr_RealAppNavQ.py** (placed in 05_RealApplication_NavQ) - a human recognition application (running on **RDDRONE-8MMNavQ** embedded system ) developed in Python based on MobileNet-SSD (MobileNet Single-Shot multibox Detection) deep neural network and on a correlation tracker algorithm
 - **server_jpg.py** (placed in 03_ZMQ_base) - ZeroMQ server (running on the ground station PC) able to talk with **hr_RealAppNavQ.py** (placed in working mode 1: "-m 1").
 - **uorb_mavlink** (placed in 06_FMUK66/test_commCompCom) - the application running on the **RDDRONE-FMUK66 FMU** able to receive custom **MAVlink** messages (sent it by **server_jpg.py** application placed in workinh mode 2: "-m 2") as **uORB** messages
+
+## How to use the human detection application
+
+All the functionalities of the main program (hr_RealAppNavQ.py) are activated through the different command line's arguments. For a short description of them see the folowing table:
+
+![hr_RealAppNavQ.py functions](./WorkingModes.PNG)
+
 
