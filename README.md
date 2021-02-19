@@ -46,5 +46,7 @@ All the functionalities of the main program (**[hr_RealAppNavQ.py](https://githu
 ![hr_RealAppNavQ.py functions](./WorkingModes.PNG)
 
 Several examples of hr_RealAppNavQ.py use: 
+1. For system performance analysis: 
+2. aerberb 
 
 
