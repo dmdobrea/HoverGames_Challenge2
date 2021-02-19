@@ -41,8 +41,10 @@ In this project, I propose a solution to sustain and enforce the quarantine zone
 
 ## How to use the human detection application
 
-All the functionalities of the main program (hr_RealAppNavQ.py) are activated through the different command line's arguments. For a short description of them see the folowing table:
+All the functionalities of the main program (**[hr_RealAppNavQ.py](https://github.com/dmdobrea/HoverGames_Challenge2/blob/main/05_RealApplication_NavQ/hr_RealAppNavQ.py)**) are activated through the different command line's arguments. For a short description of them see the folowing table:
 
 ![hr_RealAppNavQ.py functions](./WorkingModes.PNG)
+
+Several examples of hr_RealAppNavQ.py use: 
 
 
