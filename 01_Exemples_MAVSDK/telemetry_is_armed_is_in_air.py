@@ -5,8 +5,8 @@ from mavsdk import System
 
 
 async def run():
-    drone = System()
-    await drone.connect(system_address="udp://:14540")
+    drone = System(mavsdk_server_address='localhost', port=50051)
+    await drone.connect(system_address="serial:///dev/ttymxc2:921600")
 
     asyncio.ensure_future(print_is_armed(drone))
     asyncio.ensure_future(print_is_in_air(drone))
