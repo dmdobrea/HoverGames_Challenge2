@@ -1,4 +1,5 @@
-# HoverGames_Challenge2
+# NXP HoverGames Challenge 2: Help Drones, Help Others During Pandemics
+
 These are the codes developed in the frame of NXP HoverGames Challenge 2: Help Drones, Help Others During Pandemics competition 
 
 ## Videos
@@ -14,7 +15,7 @@ In this project, I propose a solution to sustain and enforce the quarantine zone
 
 ## Components
 
-#### Hardware components:
+### Hardware components:
 
 - 1 x NXP KIT-HGDRONEK66 (carbon frame kit, BLDC motors, ESCs, PDB, propellers, etc.)
 - 1 x NXP RDDRONE-FMUK66 - flight management unit
@@ -23,12 +24,18 @@ In this project, I propose a solution to sustain and enforce the quarantine zone
 - 1 x NXP HGD-TELEM433 - 433Mhz Telemetry Radio 
 - 1 x 4S 5000 mAh battery (3S can work too)
 
-#### Software components
+### Software components
+
+#### Offical software
 
 - PX4 - an open source flight control software for drones and other unmanned vehicles
 - PX4 MAVSDK - a package used to control NXPHoverGames using MAVLink
 - PX4 QGroundControl - Ground Control Station for the MAVLink protocol
 - NXP MCUXpresso IDE - Eclipse-based IDE tool used to develop applications on NXP RDDRONE-FMUK66
-- hr_RealAppNavQ.py (placed in 05_RealApplication_NavQ) - a human recognition application developed in Python based on MobileNet-SSD (MobileNet Single-Shot multibox Detection network) and on a correlation tracker algorithm
-- server_jpg.py (placed in 03_ZMQ_base) - ZeroMQ server (running on the ground station PC) able to talk with hr_RealAppNavQ.py (placed in working mode 1: "-m 1").  
+
+#### Main software components developed for NXP HoverGames Challenge 2
+
+- hr_RealAppNavQ.py (placed in 05_RealApplication_NavQ) - a human recognition application (running on NXP RDDRONE-8MMNavQ embedded system ) developed in Python based on MobileNet-SSD (MobileNet Single-Shot multibox Detection network) and on a correlation tracker algorithm
+- server_jpg.py (placed in 03_ZMQ_base) - ZeroMQ server (running on the ground station PC) able to talk with hr_RealAppNavQ.py (placed in working mode 1: "-m 1").
+- uorb_mavlink (placed in 06_FMUK66/test_commCompCom) - the application running on the RDDRONE-FMUK66 FMU amble to receive custom MAVlink messages (sent it by NavQ) as uORB messages
 
