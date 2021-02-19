@@ -46,9 +46,9 @@ All the functionalities of the main program (**[hr_RealAppNavQ.py](https://githu
 ![hr_RealAppNavQ.py functions](./WorkingModes.PNG)
 
 Several examples of hr_RealAppNavQ.py use: 
-1. For real operation on the NXPHoverGames drone: **hr_RealAppNavQ.py -m 2 -t cpu** or **hr_RealAppNavQ.py -m 2 -t myriad** - but only if Neural Compute Stick 2 is present. Here the acquisition of position data (GPS) from FMU is made in a separate thread to minimize the detection algorithm's performance impact. 
-2. For system performance analysis: **hr_RealAppNavQ.py -m 0 -t cpu -i videos/VideoTest2.mp4 -o output/VideoResults.avi**. In this situation, the human detection algorithm will run on the system's CPUs, using the VideoTest2.mp4 video, and the results will be saved to VideoResults.avi. Saving the data was done on a different process (different by the main process containing the detection algorithm), so detection performance will not be affected.  
-3. Real-time human detection and streaming data **hr_RealAppNavQ.py -m 1 -t cpu -s 192.168.100.100**. In this mode, the [Human detection - in real-time (YouTube)](https://youtu.be/pCcItZNOWmc) movie was done. The streaming is done on a new process.
+1. For real operation on the **NXPHoverGames** drone: **hr_RealAppNavQ.py -m 2 -t cpu** or **hr_RealAppNavQ.py -m 2 -t myriad** - but only if **Neural Compute Stick 2** is present. Here the acquisition of position data (**GPS**) from **FMU** is made in a separate thread to minimize the detection algorithm's performance impact. 
+2. For system performance analysis: **hr_RealAppNavQ.py -m 0 -t cpu -i videos/VideoTest2.mp4 -o output/VideoResults.avi**. In this situation, the human detection algorithm will run on the system's **CPU**s, using the VideoTest2.mp4 video, and the results will be saved to VideoResults.avi. Saving the data was done on a different process (different by the main process containing the detection algorithm), so detection performance will not be affected.  
+3. Real-time human detection and streaming data: **hr_RealAppNavQ.py -m 1 -t cpu -s 192.168.100.100**. In this mode, the [Human detection - in real-time (YouTube)](https://youtu.be/pCcItZNOWmc) movie was done. The streaming is done on a new process.
 
 ## Other software applications from this repository
 
