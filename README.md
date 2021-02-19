@@ -29,4 +29,5 @@ In this project, I propose a solution to sustain and enforce the quarantine zone
 - PX4 MAVSDK - a package used to control NXPHoverGames using MAVLink
 - PX4 QGroundControl - Ground Control Station for the MAVLink protocol
 - NXP MCUXpresso IDE - Eclipse-based IDE tool used to develop applications on NXP RDDRONE-FMUK66
+- 05_RealApplication_NavQ - a human recognition application developed in Python based on MobileNet-SSD (MobileNet Single-Shot multibox Detection network) and on a correlation tracker algorithm
 
