@@ -35,7 +35,7 @@ In this project, I propose a solution to sustain and enforce the quarantine zone
 
 #### Main software components developed for NXP HoverGames Challenge 2
 
-- **hr_RealAppNavQ.py** (placed in 05_RealApplication_NavQ) - a human recognition application (running on NXP RDDRONE-8MMNavQ embedded system ) developed in Python based on MobileNet-SSD (MobileNet Single-Shot multibox Detection network) and on a correlation tracker algorithm
+- **hr_RealAppNavQ.py** (placed in 05_RealApplication_NavQ) - a human recognition application (running on NXP RDDRONE-8MMNavQ embedded system ) developed in Python based on MobileNet-SSD (MobileNet Single-Shot multibox Detection) deep neural network and on a correlation tracker algorithm
 - **server_jpg.py** (placed in 03_ZMQ_base) - ZeroMQ server (running on the ground station PC) able to talk with hr_RealAppNavQ.py (placed in working mode 1: "-m 1").
 - **uorb_mavlink** (placed in 06_FMUK66/test_commCompCom) - the application running on the RDDRONE-FMUK66 FMU able to receive custom MAVlink messages (sent it by **server_jpg.py** application placed in workinh mode 2: "-m 2") as uORB messages
 
