@@ -56,7 +56,7 @@ Several examples of hr_RealAppNavQ.py use:
 - All the applications from the folder **[02_commCustom](https://github.com/dmdobrea/HoverGames_Challenge2/tree/main/02_commCustom)** were developed for the companion computer – in my case **NavQ**. Going by the idea that simple components are easier to understand and test than a complex program:
 1. the **[getGPS.py](https://github.com/dmdobrea/HoverGames_Challenge2/blob/main/02_commCustom/getGPS.py)** is used to get the **GPS** data from **FMU** using a **MAVLink** message – in the **[hr_RealAppNavQ.py](https://github.com/dmdobrea/HoverGames_Challenge2/blob/main/05_RealApplication_NavQ/hr_RealAppNavQ.py)** application is the section from line 33 up to 45. 
 2. **[sendCustomMavlinkMSG.py](https://github.com/dmdobrea/HoverGames_Challenge2/blob/main/02_commCustom/sendCustomMavlinkMSG.py)** sends a custom **MAVLink message** (***video_monitor*** message) from the **NavQ** to the **FMU**. In the **[hr_RealAppNavQ.py](https://github.com/dmdobrea/HoverGames_Challenge2/blob/main/05_RealApplication_NavQ/hr_RealAppNavQ.py)** application, this code can be found in two sections (a) from line 209 up to 219 and (b) from 467 to 475.
-- Part of the application from **[02_commCustom](https://github.com/dmdobrea/HoverGames_Challenge2/tree/main/02_commCustom)** folder work in pair with the applications from the **[06_FMUK66](https://github.com/dmdobrea/HoverGames_Challenge2/tree/main/06_FMUK66)**folder.
+- Part of the application from **[02_commCustom](https://github.com/dmdobrea/HoverGames_Challenge2/tree/main/02_commCustom)** folder work in pair with the applications from the **[06_FMUK66](https://github.com/dmdobrea/HoverGames_Challenge2/tree/main/06_FMUK66)** folder.
 
 
 
