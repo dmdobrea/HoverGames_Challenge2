@@ -53,5 +53,9 @@ Several examples of hr_RealAppNavQ.py use:
 ## Other software applications from this repository
 
 - All the applications from the folder **[01_Exemples_MAVSDK](https://github.com/dmdobrea/HoverGames_Challenge2/tree/main/01_Exemples_MAVSDK)** are not developed by myself. They are only used to prove the functionality of communication through **MAVSDK**. These applications have been configured to work with the **NXPHoverGames** drone via serial communication. If you want to learn how to use the **MAVSDK** to communicate from applications developed in C/C++ or Python (running on a companion computer) with a **PX4 FMU** unit, please **[follow the steps from this tutorial](https://www.hackster.io/mdobrea/c-and-python-interface-management-application-for-fmuk66-6dd935)**.
+- All the applications from the folder **[02_commCustom](https://github.com/dmdobrea/HoverGames_Challenge2/tree/main/02_commCustom)** were developed for the companion computer – in my case NavQ (NXP RDDRONE-8MMNavQ). All the applications from the folder **[02_commCustom](https://github.com/dmdobrea/HoverGames_Challenge2/tree/main/02_commCustom)** were developed for the companion computer – in my case **NavQ**. Going by the idea that simple components are easier to understand and test than a complex program: 
+(a) the **[getGPS.py](https://github.com/dmdobrea/HoverGames_Challenge2/blob/main/02_commCustom/getGPS.py)** is used to get the GPS data from **FMU** using a **MAVLink** message – in the hr_RealAppNavQ.py application is the section from line 33 up to 45. 
+(b) sendCustomMavlinkMSG.py sends a custom MAVLink message (video_monitor message) from the NavQ to the FMU. In the hr_RealAppNavQ.py application, this code can be found in two sections (1) from line 209 up to 219 and (2) from 467 to 475.
+
 
 
